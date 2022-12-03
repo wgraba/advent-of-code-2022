@@ -37,9 +37,8 @@ fn main() {
 
     elves.sort_by(|a, b| b.total_cals.cmp(&a.total_cals));
 
-    let max_elf = &elves[0];
     println!(
-        "Elf {} has the most calories at {}",
-        max_elf.id, max_elf.total_cals
+        "The top 3 elves have {} calories",
+        elves[0].total_cals + elves[1].total_cals + elves[2].total_cals
     );
 }
