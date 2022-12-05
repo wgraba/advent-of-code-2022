@@ -66,9 +66,14 @@ fn main() {
     for mv in moves {
         println!("{mv:?}");
 
-        for _ in 0..mv.num_moves {
-            let el = stacks.get_mut(stack_ids.get(&mv.start_stack_id).unwrap()).unwrap().remove(0);
-            stacks.get_mut(stack_ids.get(&mv.end_stack_id).unwrap()).unwrap().insert(0, el);
+        let els: Vec<char> = stacks
+            .get_mut(stack_ids.get(&mv.start_stack_id).unwrap())
+            .unwrap()
+            .drain(..(mv.num_moves as usize))
+            .collect();
+        
+        for el in els.iter().rev() {
+            stacks.get_mut(stack_ids.get(&mv.end_stack_id).unwrap()).unwrap().insert(0, *el);
         }
 
         println!("{stacks:?}");
