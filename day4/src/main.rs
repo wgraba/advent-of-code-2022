@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     fs::File,
     io::{BufRead, BufReader},
     ops::RangeInclusive,
@@ -34,8 +35,12 @@ fn main() {
         let elf1 = gen_range(input[0].as_str());
         let elf2 = gen_range(input[1].as_str());
 
-        let dup_assign = (elf1.start() <= elf2.start() && elf1.end() >= elf2.end())
-            || (elf2.start() <= elf1.start() && elf2.end() >= elf1.end());
+        let dup_assign = elf1
+            .collect::<HashSet<_>>()
+            .intersection(&elf2.collect::<HashSet<_>>())
+            .collect::<HashSet<_>>()
+            .len()
+            > 0;
 
         if dup_assign {
             num_dups += 1;
