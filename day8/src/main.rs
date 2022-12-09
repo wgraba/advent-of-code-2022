@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, BTreeMap},
+    collections::BTreeMap,
     fs::File,
     io::{BufRead, BufReader},
 };
@@ -10,11 +10,35 @@ struct Point {
     y: isize,
 }
 
+impl Point {
+    fn next_point(&self, dir: Direction) -> Point {
+        match dir {
+            Direction::UP => Point {
+                x: self.x,
+                y: self.y - 1,
+            },
+            Direction::DOWN => Point {
+                x: self.x,
+                y: self.y + 1,
+            },
+            Direction::LEFT => Point {
+                x: self.x - 1,
+                y: self.y,
+            },
+            Direction::RIGHT => Point {
+                x: self.x + 1,
+                y: self.y,
+            },
+        }
+    }
+}
+
 struct TreeGrid {
     // max_point: Point,
     trees: BTreeMap<Point, u8>,
 }
 
+#[derive(Copy, Clone)]
 enum Direction {
     UP,
     DOWN,
@@ -35,33 +59,20 @@ impl TreeGrid {
         Some(height)
     }
 
-    pub fn is_visible(&self, point: Point, dir: Direction) -> Result<bool, ()> {
-        let point_inc: (isize, isize) = match dir {
-            Direction::UP => (0, -1),
-            Direction::DOWN => (0, 1),
-            Direction::LEFT => (-1, 0),
-            Direction::RIGHT => (1, 0),
-        };
+    pub fn num_visible(&self, tree: &Point, dir: Direction) -> Result<u32, ()> {
+        if let Some(start_height) = self.trees.get(&tree) {
+            let mut num_visible = 0;
 
-        if let Some(base_tree_height) = self.trees.get(&point) {
-            let mut is_visible = true;
-
-            let mut next_point = Point {
-                x: point.x + point_inc.0,
-                y: point.y + point_inc.1,
-            };
-            while let Some(tree_height) = self.trees.get(&next_point) {
-                next_point = Point {
-                    x: next_point.x + point_inc.0,
-                    y: next_point.y + point_inc.1,
-                };
-                if tree_height >= base_tree_height {
-                    is_visible = false;
+            let mut next_pt = tree.next_point(dir);
+            while let Some(tree_height) = self.trees.get(&next_pt) {
+                num_visible += 1;
+                if tree_height >= start_height {
                     break;
                 }
+                next_pt = next_pt.next_point(dir);
             }
 
-            Ok(is_visible)
+            Ok(num_visible)
         } else {
             Err(())
         }
@@ -90,21 +101,38 @@ fn main() {
 
     println!("Num trees: {}", tree_grid.trees.len());
 
-    let mut num_visible = 0;
-    for (point, _) in tree_grid.trees.iter() {
-        for dir in vec![
-            Direction::UP,
-            Direction::DOWN,
-            Direction::LEFT,
-            Direction::RIGHT,
-        ] {
-            if tree_grid.is_visible(*point, dir).unwrap() {
-                // println!("{point:#?}");
-                num_visible += 1;
-                break;
-            }
+    // Part 1
+    // let mut num_visible = 0;
+    // for (point, _) in tree_grid.trees.iter() {
+    //     for dir in vec![
+    //         Direction::UP,
+    //         Direction::DOWN,
+    //         Direction::LEFT,
+    //         Direction::RIGHT,
+    //     ] {
+    //         if tree_grid.is_visible(*point, dir).unwrap() {
+    //             // println!("{point:#?}");
+    //             num_visible += 1;
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // println!("Num trees visible: {}", num_visible);
+
+    // Part 2
+    let mut max_score = 0;
+    for tree in tree_grid.trees.keys() {
+        let num_up = tree_grid.num_visible(tree, Direction::UP).unwrap();
+        let num_down = tree_grid.num_visible(tree, Direction::DOWN).unwrap();
+        let num_left = tree_grid.num_visible(tree, Direction::LEFT).unwrap();
+        let num_right = tree_grid.num_visible(tree, Direction::RIGHT).unwrap();
+
+        let score = num_up * num_down * num_left * num_right;
+        if score > max_score {
+            max_score = score;
         }
     }
 
-    println!("Num trees visible: {}", num_visible);
+    println!("Max scenic score: {max_score}");
 }
